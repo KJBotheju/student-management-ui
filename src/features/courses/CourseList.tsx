@@ -8,21 +8,6 @@ import {
     deleteCourse,
 } from './courseSlice';
 
-interface Course {
-    id: number;
-    code: string;
-    title: string;
-    credits: number;
-    capacity: number;
-}
-
-interface CourseState {
-    courses: Course[];
-    loading: boolean;
-    error: string | null;
-    currentPage: number;
-    totalPages: number;
-}
 import {
     Table,
     TableBody,
@@ -40,8 +25,25 @@ import {
     IconButton,
     Typography,
     Pagination,
+    Box,
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+
+interface Course {
+    id: number;
+    code: string;
+    title: string;
+    credits: number;
+    capacity: number;
+}
+
+interface CourseState {
+    courses: Course[];
+    loading: boolean;
+    error: string | null;
+    currentPage: number;
+    totalPages: number;
+}
 
 const CourseList: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -103,26 +105,35 @@ const CourseList: React.FC = () => {
 
     return (
         <>
-            <Typography variant="h4" gutterBottom>
-                Courses
-            </Typography>
-            <Button
-                variant="contained"
-                color="primary"
-                onClick={() => handleOpen()}
-                sx={{ mb: 2 }}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Typography variant="h4">
+                    Courses
+                </Typography>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => handleOpen()}
+                    sx={{ backgroundColor: '#2e7d32' }}
+                >
+                    Add New Course
+                </Button>
+            </Box>
+            <TableContainer 
+                component={Paper} 
+                sx={{ 
+                    borderRadius: 2,
+                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                    overflow: 'hidden'
+                }}
             >
-                Add New Course
-            </Button>
-            <TableContainer component={Paper}>
                 <Table>
                     <TableHead>
-                        <TableRow>
-                            <TableCell>Code</TableCell>
-                            <TableCell>Title</TableCell>
-                            <TableCell>Credits</TableCell>
-                            <TableCell>Capacity</TableCell>
-                            <TableCell>Actions</TableCell>
+                        <TableRow sx={{ backgroundColor: '#2e7d32' }}>
+                            <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Code</TableCell>
+                            <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Title</TableCell>
+                            <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Credits</TableCell>
+                            <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Capacity</TableCell>
+                            <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Actions</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -145,12 +156,27 @@ const CourseList: React.FC = () => {
                     </TableBody>
                 </Table>
             </TableContainer>
-            <Pagination
-                count={totalPages}
-                page={currentPage + 1}
-                onChange={handlePageChange}
-                sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}
-            />
+            <Box sx={{ mt: 3, mb: 2, display: 'flex', justifyContent: 'center' }}>
+                <Pagination
+                    count={totalPages}
+                    page={currentPage + 1}
+                    onChange={handlePageChange}
+                    color="primary"
+                    size="large"
+                    sx={{ 
+                        '& .MuiPaginationItem-root': {
+                            color: '#2e7d32',
+                            '&.Mui-selected': {
+                                backgroundColor: '#2e7d32',
+                                color: 'white',
+                                '&:hover': {
+                                    backgroundColor: '#1b5e20',
+                                },
+                            },
+                        },
+                    }}
+                />
+            </Box>
 
             <Dialog open={open} onClose={handleClose}>
                 <DialogTitle>

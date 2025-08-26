@@ -1,16 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store/store';
-import { AlertColor } from '@mui/material';
-import Notification from '../../components/Notification';
-import ConfirmDialog from '../../components/ConfirmDialog';
-import {
-    fetchStudentEnrollments,
-    enrollStudent,
-    gradeEnrollment,
-    dropEnrollment,
-    fetchStudentGPA,
-} from './enrollmentSlice';
 import {
     Table,
     TableBody,
@@ -24,15 +14,29 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
-    TextField,
     IconButton,
     Typography,
     Select,
     MenuItem,
     FormControl,
     InputLabel,
+    Box,
+    AlertColor,
 } from '@mui/material';
-import { Delete as DeleteIcon, Grade as GradeIcon } from '@mui/icons-material';
+import { 
+    Delete as DeleteIcon, 
+    Grade as GradeIcon,
+    Add as AddIcon 
+} from '@mui/icons-material';
+import Notification from '../../components/Notification';
+import ConfirmDialog from '../../components/ConfirmDialog';
+import {
+    fetchStudentEnrollments,
+    enrollStudent,
+    gradeEnrollment,
+    dropEnrollment,
+    fetchStudentGPA,
+} from './enrollmentSlice';
 import { fetchStudents } from '../students/studentSlice';
 import { fetchCourses } from '../courses/courseSlice';
 
@@ -200,24 +204,56 @@ const EnrollmentList: React.FC = () => {
     if (loading) return <div>Loading...</div>;
 
     return (
-        <>
-            <Typography variant="h4" gutterBottom>
-                Enrollments
-            </Typography>
-            
-            <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel>Select Student</InputLabel>
-                <Select
-                    value={selectedStudentId}
-                    onChange={(e) => setSelectedStudentId(e.target.value)}
+        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Typography variant="h4">
+                    Enrollments
+                </Typography>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleEnrollOpen}
+                    disabled={!selectedStudentId}
+                    startIcon={<AddIcon />}
                 >
-                    {students.map((student: any) => (
-                        <MenuItem key={student.id} value={student.id}>
-                            {student.indexNumber} - {student.firstName} {student.lastName}
-                        </MenuItem>
-                    ))}
-                </Select>
-            </FormControl>
+                    New Enrollment
+                </Button>
+            </Box>
+            
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 3 }}>
+                <FormControl sx={{ minWidth: 300 }}>
+                    <InputLabel>Select Student</InputLabel>
+                    <Select
+                        value={selectedStudentId}
+                        onChange={(e) => setSelectedStudentId(e.target.value)}
+                    >
+                        {students.map((student: any) => (
+                            <MenuItem key={student.id} value={student.id}>
+                                {student.indexNumber} - {student.firstName} {student.lastName}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+                {gpa !== null && selectedStudentId && (
+                    <Paper 
+                        elevation={0} 
+                        sx={{ 
+                            p: 2, 
+                            backgroundColor: 'primary.light',
+                            color: 'white',
+                            borderRadius: 2,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1
+                        }}
+                    >
+                        <GradeIcon />
+                        <Typography variant="h6" component="div">
+                            Current GPA: {gpa.toFixed(2)}
+                        </Typography>
+                    </Paper>
+                )}
+            </Box>
 
             {selectedStudentId && (
                 <>
@@ -357,7 +393,7 @@ const EnrollmentList: React.FC = () => {
                 onConfirm={confirmDialog.onConfirm}
                 onCancel={() => setConfirmDialog(prev => ({ ...prev, open: false }))}
             />
-        </>
+        </Box>
     );
 };
 

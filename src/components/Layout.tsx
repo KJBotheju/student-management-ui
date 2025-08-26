@@ -68,7 +68,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     </Box>
                 </Toolbar>
             </AppBar>
-            <Container maxWidth="lg" sx={{ mt: 4, mb: 4, flex: 1 }}>
+            <Box sx={{ flex: 1, p: 4, width: '100%' }}>
                 <Paper 
                     elevation={0} 
                     sx={{ 
@@ -76,11 +76,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                         borderRadius: 3,
                         backgroundColor: 'background.paper',
                         border: `1px solid ${theme.palette.divider}`,
+                        height: 'calc(100vh - 160px)', // Adjust height to fill available space
+                        display: 'flex',
+                        flexDirection: 'column',
                     }}
                 >
                     {children}
                 </Paper>
-            </Container>
+            </Box>
             <Box 
                 component="footer" 
                 sx={{ 
