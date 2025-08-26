@@ -7,6 +7,7 @@ const api = axios.create({
     headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
     },
     withCredentials: true,
 });
@@ -31,7 +32,7 @@ export const enrollmentAPI = {
     enroll: (studentId: number, courseId: number) => 
         api.post(`/enrollments/enroll?studentId=${studentId}&courseId=${courseId}`),
     grade: (id: number, grade: string) => 
-        api.patch(`/enrollments/${id}/grade?grade=${grade}`),
+        api.patch(`/enrollments/${id}/grade?grade=${encodeURIComponent(grade)}`, null),
     getByStudent: (studentId: number) => 
         api.get(`/enrollments/by-student/${studentId}`),
     getByCourse: (courseId: number) => 

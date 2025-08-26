@@ -60,18 +60,32 @@ const EnrollmentList: React.FC = () => {
 
     useEffect(() => {
         if (selectedStudentId) {
-            dispatch(fetchStudentEnrollments(Number(selectedStudentId)));
+            dispatch(fetchStudentEnrollments(Number(selectedStudentId)))
+                .catch(error => {
+                    console.error('Error fetching enrollments:', error);
+                    alert('Error loading enrollments. Please try again.');
+                });
             dispatch(fetchStudentGPA(Number(selectedStudentId)))
                 .then((action: any) => {
                     if (action.payload) {
                         setGpa(action.payload.gpa);
                     }
+                })
+                .catch(error => {
+                    console.error('Error fetching GPA:', error);
                 });
         }
     }, [dispatch, selectedStudentId]);
 
     const handleEnrollOpen = () => {
-        setEnrollFormData({ studentId: '', courseId: '' });
+        if (!selectedStudentId) {
+            alert('Please select a student first');
+            return;
+        }
+        setEnrollFormData({ 
+            studentId: selectedStudentId, 
+            courseId: '' 
+        });
         setEnrollOpen(true);
     };
 
@@ -82,13 +96,34 @@ const EnrollmentList: React.FC = () => {
     };
 
     const handleEnrollSubmit = async () => {
-        await dispatch(enrollStudent({
-            studentId: Number(enrollFormData.studentId),
-            courseId: Number(enrollFormData.courseId),
-        }));
-        setEnrollOpen(false);
-        if (selectedStudentId) {
-            dispatch(fetchStudentEnrollments(Number(selectedStudentId)));
+        try {
+            if (!enrollFormData.studentId || !enrollFormData.courseId) {
+                alert('Please select both student and course');
+                return;
+            }
+
+            const result = await dispatch(enrollStudent({
+                studentId: Number(enrollFormData.studentId),
+                courseId: Number(enrollFormData.courseId),
+            }));
+
+            if (enrollStudent.fulfilled.match(result)) {
+                setEnrollOpen(false);
+                if (selectedStudentId) {
+                    try {
+                        await dispatch(fetchStudentEnrollments(Number(selectedStudentId))).unwrap();
+                    } catch (error) {
+                        console.error('Error refreshing enrollments:', error);
+                        // Don't show alert here as the enrollment was successful
+                    }
+                }
+            } else {
+                const error = result.payload as any;
+                alert(error?.message || 'Failed to enroll student. Please try again.');
+            }
+        } catch (error: any) {
+            console.error('Error enrolling student:', error);
+            alert(error?.message || 'Failed to enroll student. Please try again.');
         }
     };
 
@@ -115,7 +150,17 @@ const EnrollmentList: React.FC = () => {
         if (window.confirm('Are you sure you want to drop this enrollment?')) {
             await dispatch(dropEnrollment(id));
             if (selectedStudentId) {
-                dispatch(fetchStudentEnrollments(Number(selectedStudentId)));
+                await dispatch(fetchStudentEnrollments(Number(selectedStudentId)));
+                // Refresh GPA after dropping enrollment
+                dispatch(fetchStudentGPA(Number(selectedStudentId)))
+                    .then((action: any) => {
+                        if (action.payload) {
+                            setGpa(action.payload.gpa);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error updating GPA after drop:', error);
+                    });
             }
         }
     };
@@ -200,23 +245,32 @@ const EnrollmentList: React.FC = () => {
                     <FormControl fullWidth sx={{ mt: 1 }}>
                         <InputLabel>Course</InputLabel>
                         <Select
+                            required
                             value={enrollFormData.courseId}
                             onChange={(e) => setEnrollFormData({
                                 ...enrollFormData,
                                 courseId: e.target.value,
                             })}
                         >
-                            {courses.map((course: any) => (
-                                <MenuItem key={course.id} value={course.id}>
-                                    {course.code} - {course.title}
-                                </MenuItem>
-                            ))}
+                            {courses
+                                .filter((course: any) => 
+                                    !enrollments.some(e => e.course.id === course.id))
+                                .map((course: any) => (
+                                    <MenuItem key={course.id} value={course.id}>
+                                        {course.code} - {course.title}
+                                    </MenuItem>
+                                ))
+                            }
                         </Select>
                     </FormControl>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setEnrollOpen(false)}>Cancel</Button>
-                    <Button onClick={handleEnrollSubmit} color="primary">
+                    <Button 
+                        onClick={handleEnrollSubmit} 
+                        color="primary"
+                        disabled={!enrollFormData.courseId}
+                    >
                         Enroll
                     </Button>
                 </DialogActions>
