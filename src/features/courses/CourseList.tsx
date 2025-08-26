@@ -7,6 +7,22 @@ import {
     updateCourse,
     deleteCourse,
 } from './courseSlice';
+
+interface Course {
+    id: number;
+    code: string;
+    title: string;
+    credits: number;
+    capacity: number;
+}
+
+interface CourseState {
+    courses: Course[];
+    loading: boolean;
+    error: string | null;
+    currentPage: number;
+    totalPages: number;
+}
 import {
     Table,
     TableBody,
@@ -30,12 +46,12 @@ import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 const CourseList: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
     const { courses, loading, currentPage, totalPages } = useSelector(
-        (state: RootState) => state.courses
+        (state: RootState) => state.courses as CourseState
     );
 
     const [open, setOpen] = useState(false);
-    const [editingCourse, setEditingCourse] = useState<any>(null);
-    const [formData, setFormData] = useState({
+    const [editingCourse, setEditingCourse] = useState<Course | null>(null);
+    const [formData, setFormData] = useState<Omit<Course, 'id'>>({
         code: '',
         title: '',
         credits: 3,
@@ -64,7 +80,7 @@ const CourseList: React.FC = () => {
 
     const handleSubmit = async () => {
         if (editingCourse) {
-            await dispatch(updateCourse({ id: editingCourse.id, course: formData }));
+            await dispatch(updateCourse({ id: editingCourse.id, course: { ...formData, id: editingCourse.id } }));
         } else {
             await dispatch(createCourse(formData));
         }
@@ -110,7 +126,7 @@ const CourseList: React.FC = () => {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {courses.map((course) => (
+                        {courses.map((course: Course) => (
                             <TableRow key={course.id}>
                                 <TableCell>{course.code}</TableCell>
                                 <TableCell>{course.title}</TableCell>

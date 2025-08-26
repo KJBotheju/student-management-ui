@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../../store/store';
+import { AppDispatch, RootState, Student, StudentState } from '../../store/store';
 import {
     fetchStudents,
     createStudent,
@@ -30,12 +30,12 @@ import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 const StudentList: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
     const { students, loading, currentPage, totalPages } = useSelector(
-        (state: RootState) => state.students
+        (state: RootState) => state.students as StudentState
     );
 
     const [open, setOpen] = useState(false);
-    const [editingStudent, setEditingStudent] = useState<any>(null);
-    const [formData, setFormData] = useState({
+    const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+    const [formData, setFormData] = useState<Omit<Student, 'id'>>({
         indexNumber: '',
         firstName: '',
         lastName: '',
@@ -64,7 +64,7 @@ const StudentList: React.FC = () => {
 
     const handleSubmit = async () => {
         if (editingStudent) {
-            await dispatch(updateStudent({ id: editingStudent.id, student: formData }));
+            await dispatch(updateStudent({ id: editingStudent.id, student: { ...formData, id: editingStudent.id } }));
         } else {
             await dispatch(createStudent(formData));
         }
@@ -110,7 +110,7 @@ const StudentList: React.FC = () => {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {students.map((student) => (
+                        {students.map((student: Student) => (
                             <TableRow key={student.id}>
                                 <TableCell>{student.indexNumber}</TableCell>
                                 <TableCell>{student.firstName}</TableCell>
