@@ -69,9 +69,10 @@ const studentSlice = createSlice({
             })
             .addCase(fetchStudents.fulfilled, (state, action: PayloadAction<any>) => {
                 state.loading = false;
-                state.students = action.payload.content;
-                state.currentPage = action.payload.number;
-                state.totalPages = action.payload.totalPages;
+                // Handle both DTO and direct Page response formats
+                state.students = action.payload.content || [];
+                state.currentPage = action.payload.number || action.payload.currentPage || 0;
+                state.totalPages = action.payload.totalPages || 0;
             })
             .addCase(fetchStudents.rejected, (state, action) => {
                 state.loading = false;

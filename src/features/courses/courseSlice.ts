@@ -69,9 +69,10 @@ const courseSlice = createSlice({
             })
             .addCase(fetchCourses.fulfilled, (state, action: PayloadAction<any>) => {
                 state.loading = false;
-                state.courses = action.payload.content;
-                state.currentPage = action.payload.number;
-                state.totalPages = action.payload.totalPages;
+                // Handle both DTO and direct Page response formats
+                state.courses = action.payload.content || [];
+                state.currentPage = action.payload.number || action.payload.currentPage || 0;
+                state.totalPages = action.payload.totalPages || 0;
             })
             .addCase(fetchCourses.rejected, (state, action) => {
                 state.loading = false;
