@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store/store';
+import { AlertColor } from '@mui/material';
+import Notification from '../../components/Notification';
+import ConfirmDialog from '../../components/ConfirmDialog';
 import {
     fetchStudentEnrollments,
     enrollStudent,
@@ -38,6 +41,21 @@ const EnrollmentList: React.FC = () => {
     const { enrollments, loading } = useSelector((state: RootState) => state.enrollments);
     const { students } = useSelector((state: RootState) => state.students);
     const { courses } = useSelector((state: RootState) => state.courses);
+    
+    // Notification state
+    const [notification, setNotification] = useState({
+        open: false,
+        message: '',
+        severity: 'success' as AlertColor
+    });
+    
+    // Confirmation dialog state
+    const [confirmDialog, setConfirmDialog] = useState({
+        open: false,
+        title: '',
+        message: '',
+        onConfirm: () => {}
+    });
 
     const [enrollOpen, setEnrollOpen] = useState(false);
     const [gradeOpen, setGradeOpen] = useState(false);
@@ -146,23 +164,37 @@ const EnrollmentList: React.FC = () => {
         }
     };
 
-    const handleDrop = async (id: number) => {
-        if (window.confirm('Are you sure you want to drop this enrollment?')) {
-            await dispatch(dropEnrollment(id));
-            if (selectedStudentId) {
-                await dispatch(fetchStudentEnrollments(Number(selectedStudentId)));
-                // Refresh GPA after dropping enrollment
-                dispatch(fetchStudentGPA(Number(selectedStudentId)))
-                    .then((action: any) => {
-                        if (action.payload) {
-                            setGpa(action.payload.gpa);
+    const handleDrop = (id: number) => {
+        setConfirmDialog({
+            open: true,
+            title: 'Drop Enrollment',
+            message: 'Are you sure you want to drop this enrollment? This action cannot be undone.',
+            onConfirm: async () => {
+                try {
+                    await dispatch(dropEnrollment(id));
+                    if (selectedStudentId) {
+                        await dispatch(fetchStudentEnrollments(Number(selectedStudentId)));
+                        // Refresh GPA after dropping enrollment
+                        const gpaAction: any = await dispatch(fetchStudentGPA(Number(selectedStudentId)));
+                        if (gpaAction.payload) {
+                            setGpa(gpaAction.payload.gpa);
                         }
-                    })
-                    .catch(error => {
-                        console.error('Error updating GPA after drop:', error);
+                    }
+                    setNotification({
+                        open: true,
+                        message: 'Enrollment dropped successfully',
+                        severity: 'success'
                     });
+                } catch (error) {
+                    setNotification({
+                        open: true,
+                        message: 'Failed to drop enrollment. Please try again.',
+                        severity: 'error'
+                    });
+                }
+                setConfirmDialog(prev => ({ ...prev, open: false }));
             }
-        }
+        });
     };
 
     if (loading) return <div>Loading...</div>;
@@ -204,15 +236,22 @@ const EnrollmentList: React.FC = () => {
                         New Enrollment
                     </Button>
 
-                    <TableContainer component={Paper}>
+                    <TableContainer 
+                        component={Paper} 
+                        sx={{ 
+                            borderRadius: 2,
+                            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                            overflow: 'hidden'
+                        }}
+                    >
                         <Table>
                             <TableHead>
-                                <TableRow>
-                                    <TableCell>Course Code</TableCell>
-                                    <TableCell>Course Title</TableCell>
-                                    <TableCell>Credits</TableCell>
-                                    <TableCell>Grade</TableCell>
-                                    <TableCell>Actions</TableCell>
+                                <TableRow sx={{ backgroundColor: 'primary.light' }}>
+                                    <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Course Code</TableCell>
+                                    <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Course Title</TableCell>
+                                    <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Credits</TableCell>
+                                    <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Grade</TableCell>
+                                    <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Actions</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
@@ -301,6 +340,23 @@ const EnrollmentList: React.FC = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            {/* Notification Component */}
+            <Notification
+                open={notification.open}
+                message={notification.message}
+                severity={notification.severity}
+                onClose={() => setNotification(prev => ({ ...prev, open: false }))}
+            />
+
+            {/* Confirmation Dialog */}
+            <ConfirmDialog
+                open={confirmDialog.open}
+                title={confirmDialog.title}
+                message={confirmDialog.message}
+                onConfirm={confirmDialog.onConfirm}
+                onCancel={() => setConfirmDialog(prev => ({ ...prev, open: false }))}
+            />
         </>
     );
 };

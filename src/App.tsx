@@ -12,10 +12,48 @@ import EnrollmentList from './features/enrollments/EnrollmentList';
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#1976d2',
+      main: '#2e7d32', // dark green
+      light: '#4caf50', // light green
+      dark: '#1b5e20', // darker green
     },
     secondary: {
-      main: '#dc004e',
+      main: '#81c784', // lighter green
+    },
+    background: {
+      default: '#ffffff',
+      paper: '#ffffff',
+    },
+    error: {
+      main: '#d32f2f',
+    },
+    success: {
+      main: '#2e7d32',
+    },
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+          textTransform: 'none',
+          fontWeight: 600,
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: 12,
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+        },
+      },
+    },
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+        },
+      },
     },
   },
 });
