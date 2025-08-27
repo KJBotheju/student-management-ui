@@ -26,8 +26,20 @@ import {
     Typography,
     Pagination,
     Box,
+    Divider,
+    InputAdornment,
+    Chip,
+    Snackbar,
 } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { 
+    Edit as EditIcon, 
+    Delete as DeleteIcon,
+    Add as AddIcon,
+    School as SchoolIcon,
+    Numbers as NumbersIcon,
+    Groups as GroupsIcon,
+    Close as CloseIcon,
+} from '@mui/icons-material';
 
 interface Course {
     id: number;
@@ -56,8 +68,13 @@ const CourseList: React.FC = () => {
     const [formData, setFormData] = useState<Omit<Course, 'id'>>({
         code: '',
         title: '',
-        credits: 3,
+        credits: 2,
         capacity: 50,
+    });
+    const [snackbar, setSnackbar] = useState({
+        open: false,
+        message: '',
+        severity: 'success' as 'success' | 'error' | 'warning' | 'info'
     });
 
     useEffect(() => {
@@ -70,7 +87,7 @@ const CourseList: React.FC = () => {
             setFormData(course);
         } else {
             setEditingCourse(null);
-            setFormData({ code: '', title: '', credits: 3, capacity: 50 });
+            setFormData({ code: '', title: '', credits: 2, capacity: 50 });
         }
         setOpen(true);
     };
@@ -81,24 +98,59 @@ const CourseList: React.FC = () => {
     };
 
     const handleSubmit = async () => {
-        if (editingCourse) {
-            await dispatch(updateCourse({ id: editingCourse.id, course: { ...formData, id: editingCourse.id } }));
-        } else {
-            await dispatch(createCourse(formData));
+        try {
+            if (editingCourse) {
+                await dispatch(updateCourse({ id: editingCourse.id, course: { ...formData, id: editingCourse.id } }));
+                setSnackbar({
+                    open: true,
+                    message: 'Course updated successfully!',
+                    severity: 'success'
+                });
+            } else {
+                await dispatch(createCourse(formData));
+                setSnackbar({
+                    open: true,
+                    message: 'Course created successfully!',
+                    severity: 'success'
+                });
+            }
+            handleClose();
+            dispatch(fetchCourses({ page: currentPage, size: 10 }));
+        } catch (error) {
+            setSnackbar({
+                open: true,
+                message: 'Error saving course. Please try again.',
+                severity: 'error'
+            });
         }
-        handleClose();
-        dispatch(fetchCourses({ page: currentPage, size: 10 }));
     };
 
     const handleDelete = async (id: number) => {
         if (window.confirm('Are you sure you want to delete this course?')) {
-            await dispatch(deleteCourse(id));
-            dispatch(fetchCourses({ page: currentPage, size: 10 }));
+            try {
+                await dispatch(deleteCourse(id));
+                setSnackbar({
+                    open: true,
+                    message: 'Course deleted successfully!',
+                    severity: 'success'
+                });
+                dispatch(fetchCourses({ page: currentPage, size: 10 }));
+            } catch (error) {
+                setSnackbar({
+                    open: true,
+                    message: 'Error deleting course. Please try again.',
+                    severity: 'error'
+                });
+            }
         }
     };
 
     const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
         dispatch(fetchCourses({ page: value - 1, size: 10 }));
+    };
+
+    const handleSnackbarClose = () => {
+        setSnackbar({ ...snackbar, open: false });
     };
 
     return (
@@ -117,7 +169,20 @@ const CourseList: React.FC = () => {
                     variant="contained"
                     color="primary"
                     onClick={() => handleOpen()}
-                    sx={{ backgroundColor: '#2e7d32' }}
+                    startIcon={<AddIcon />}
+                    sx={{ 
+                        backgroundColor: '#2e7d32',
+                        '&:hover': {
+                            backgroundColor: '#1b5e20',
+                        },
+                        borderRadius: 2,
+                        px: 3,
+                        py: 1.5,
+                        fontWeight: 'bold',
+                        textTransform: 'none',
+                        fontSize: '1rem',
+                        boxShadow: '0 4px 12px rgba(46, 125, 50, 0.3)',
+                    }}
                     disabled={loading}
                 >
                     Add New Course
@@ -206,57 +271,271 @@ const CourseList: React.FC = () => {
                 />
             </Box>
 
-            <Dialog open={open} onClose={handleClose}>
-                <DialogTitle>
-                    {editingCourse ? 'Edit Course' : 'Add New Course'}
+            <Dialog 
+                open={open} 
+                onClose={handleClose}
+                maxWidth="md"
+                fullWidth
+                scroll="paper"
+                PaperProps={{
+                    sx: {
+                        borderRadius: 3,
+                        boxShadow: '0 24px 48px rgba(0, 0, 0, 0.15)',
+                        overflow: 'visible',
+                        minHeight: '60vh',
+                        maxHeight: '90vh',
+                    }
+                }}
+            >
+                <DialogTitle
+                    sx={{
+                        background: 'linear-gradient(135deg, #2e7d32 0%, #43a047 100%)',
+                        color: 'white',
+                        py: 3,
+                        position: 'relative',
+                        textAlign: 'center',
+                    }}
+                >
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+                        <SchoolIcon sx={{ fontSize: 28 }} />
+                        <Typography variant="h5" component="div" sx={{ fontWeight: 'bold' }}>
+                            {editingCourse ? 'Edit Course' : 'Add New Course'}
+                        </Typography>
+                    </Box>
+                    <IconButton
+                        onClick={handleClose}
+                        sx={{
+                            position: 'absolute',
+                            right: 8,
+                            top: 8,
+                            color: 'white',
+                            '&:hover': {
+                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                            },
+                        }}
+                    >
+                        <CloseIcon />
+                    </IconButton>
                 </DialogTitle>
-                <DialogContent>
-                    <TextField
-                        margin="dense"
-                        label="Code"
-                        fullWidth
-                        value={formData.code}
-                        onChange={(e) =>
-                            setFormData({ ...formData, code: e.target.value })
-                        }
-                    />
-                    <TextField
-                        margin="dense"
-                        label="Title"
-                        fullWidth
-                        value={formData.title}
-                        onChange={(e) =>
-                            setFormData({ ...formData, title: e.target.value })
-                        }
-                    />
-                    <TextField
-                        margin="dense"
-                        label="Credits"
-                        type="number"
-                        fullWidth
-                        value={formData.credits}
-                        onChange={(e) =>
-                            setFormData({ ...formData, credits: Number(e.target.value) })
-                        }
-                    />
-                    <TextField
-                        margin="dense"
-                        label="Capacity"
-                        type="number"
-                        fullWidth
-                        value={formData.capacity}
-                        onChange={(e) =>
-                            setFormData({ ...formData, capacity: Number(e.target.value) })
-                        }
-                    />
+                <DialogContent 
+                    sx={{ 
+                        pt: 4, 
+                        pb: 2,
+                        px: 4,
+                        minHeight: '400px',
+                        overflow: 'auto',
+                    }}
+                >
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4, pt: 4 }}>
+                        <TextField
+                            label="Course Code"
+                            fullWidth
+                            value={formData.code}
+                            onChange={(e) =>
+                                setFormData({ ...formData, code: e.target.value })
+                            }
+                            placeholder="e.g., CS101, MATH201"
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <Chip 
+                                            label="CODE" 
+                                            size="small" 
+                                            sx={{ 
+                                                backgroundColor: '#e8f5e8',
+                                                color: '#2e7d32',
+                                                fontWeight: 'bold',
+                                                fontSize: '0.75rem',
+                                                height: '24px',
+                                                marginTop: '8px',
+                                                '& .MuiChip-label': {
+                                                    paddingX: '8px',
+                                                }
+                                            }} 
+                                        />
+                                    </InputAdornment>
+                                ),
+                            }}
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    height: '56px',
+                                    '&:hover fieldset': {
+                                        borderColor: '#2e7d32',
+                                    },
+                                    '&.Mui-focused fieldset': {
+                                        borderColor: '#2e7d32',
+                                    },
+                                },
+                                '& .MuiInputLabel-root.Mui-focused': {
+                                    color: '#2e7d32',
+                                },
+                                '& .MuiInputAdornment-root': {
+                                    alignItems: 'center',
+                                    marginTop: '0px !important',
+                                }
+                            }}
+                        />
+                        
+                        <TextField
+                            label="Course Title"
+                            fullWidth
+                            multiline
+                            rows={2}
+                            value={formData.title}
+                            onChange={(e) =>
+                                setFormData({ ...formData, title: e.target.value })
+                            }
+                            placeholder="Enter the full course title"
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <SchoolIcon sx={{ color: '#2e7d32', mt: -1 }} />
+                                    </InputAdornment>
+                                ),
+                            }}
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    '&:hover fieldset': {
+                                        borderColor: '#2e7d32',
+                                    },
+                                    '&.Mui-focused fieldset': {
+                                        borderColor: '#2e7d32',
+                                    },
+                                },
+                                '& .MuiInputLabel-root.Mui-focused': {
+                                    color: '#2e7d32',
+                                },
+                            }}
+                        />
+                        
+                        <Box sx={{ display: 'flex', gap: 3 }}>
+                            <TextField
+                                label="Credits"
+                                type="number"
+                                fullWidth
+                                value={formData.credits}
+                                onChange={(e) =>
+                                    setFormData({ ...formData, credits: Number(e.target.value) })
+                                }
+                                placeholder="e.g., 2"
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <NumbersIcon sx={{ color: '#2e7d32' }} />
+                                        </InputAdornment>
+                                    ),
+                                }}
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        height: '56px',
+                                        '&:hover fieldset': {
+                                            borderColor: '#2e7d32',
+                                        },
+                                        '&.Mui-focused fieldset': {
+                                            borderColor: '#2e7d32',
+                                        },
+                                    },
+                                    '& .MuiInputLabel-root.Mui-focused': {
+                                        color: '#2e7d32',
+                                    },
+                                }}
+                            />
+                            <TextField
+                                label="Capacity"
+                                type="number"
+                                fullWidth
+                                value={formData.capacity}
+                                onChange={(e) =>
+                                    setFormData({ ...formData, capacity: Number(e.target.value) })
+                                }
+                                placeholder="e.g., 50"
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <GroupsIcon sx={{ color: '#2e7d32' }} />
+                                        </InputAdornment>
+                                    ),
+                                }}
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        height: '56px',
+                                        '&:hover fieldset': {
+                                            borderColor: '#2e7d32',
+                                        },
+                                        '&.Mui-focused fieldset': {
+                                            borderColor: '#2e7d32',
+                                        },
+                                    },
+                                    '& .MuiInputLabel-root.Mui-focused': {
+                                        color: '#2e7d32',
+                                    },
+                                }}
+                            />
+                        </Box>
+                    </Box>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleClose}>Cancel</Button>
-                    <Button onClick={handleSubmit} color="primary">
-                        {editingCourse ? 'Update' : 'Create'}
+                <Divider />
+                <DialogActions sx={{ p: 4, gap: 3, justifyContent: 'center', backgroundColor: '#fafafa' }}>
+                    <Button 
+                        onClick={handleClose}
+                        variant="outlined"
+                        size="large"
+                        sx={{
+                            color: '#666',
+                            borderColor: '#ddd',
+                            '&:hover': {
+                                borderColor: '#999',
+                                backgroundColor: '#f5f5f5',
+                            },
+                            borderRadius: 2,
+                            px: 6,
+                            py: 1.5,
+                            textTransform: 'none',
+                            fontWeight: 'bold',
+                            minWidth: '120px',
+                        }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button 
+                        onClick={handleSubmit} 
+                        variant="contained"
+                        size="large"
+                        sx={{
+                            background: 'linear-gradient(135deg, #2e7d32 0%, #43a047 100%)',
+                            '&:hover': {
+                                background: 'linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%)',
+                            },
+                            borderRadius: 2,
+                            px: 6,
+                            py: 1.5,
+                            textTransform: 'none',
+                            fontWeight: 'bold',
+                            boxShadow: '0 4px 12px rgba(46, 125, 50, 0.3)',
+                            minWidth: '140px',
+                        }}
+                    >
+                        {editingCourse ? 'Update Course' : 'Create Course'}
                     </Button>
                 </DialogActions>
             </Dialog>
+            
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={4000}
+                onClose={handleSnackbarClose}
+                message={snackbar.message}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                sx={{
+                    '& .MuiSnackbarContent-root': {
+                        backgroundColor: snackbar.severity === 'success' ? '#2e7d32' : '#d32f2f',
+                        color: 'white',
+                        fontWeight: 'bold',
+                        borderRadius: 2,
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                    }
+                }}
+            />
             </Box>
         </Box>
     );
