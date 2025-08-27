@@ -69,26 +69,56 @@ const courseSlice = createSlice({
             })
             .addCase(fetchCourses.fulfilled, (state, action: PayloadAction<any>) => {
                 state.loading = false;
-                // Handle both DTO and direct Page response formats
                 state.courses = action.payload.content || [];
                 state.currentPage = action.payload.number || action.payload.currentPage || 0;
                 state.totalPages = action.payload.totalPages || 0;
+                state.error = null;
             })
             .addCase(fetchCourses.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.error.message || 'Failed to fetch courses';
             })
+            .addCase(createCourse.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
             .addCase(createCourse.fulfilled, (state, action) => {
+                state.loading = false;
                 state.courses.push(action.payload);
+                state.error = null;
+            })
+            .addCase(createCourse.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.error.message || 'Failed to create course';
+            })
+            .addCase(updateCourse.pending, (state) => {
+                state.loading = true;
+                state.error = null;
             })
             .addCase(updateCourse.fulfilled, (state, action) => {
+                state.loading = false;
                 const index = state.courses.findIndex(course => course.id === action.payload.id);
                 if (index !== -1) {
                     state.courses[index] = action.payload;
                 }
+                state.error = null;
+            })
+            .addCase(updateCourse.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.error.message || 'Failed to update course';
+            })
+            .addCase(deleteCourse.pending, (state) => {
+                state.loading = true;
+                state.error = null;
             })
             .addCase(deleteCourse.fulfilled, (state, action) => {
+                state.loading = false;
                 state.courses = state.courses.filter(course => course.id !== action.payload);
+                state.error = null;
+            })
+            .addCase(deleteCourse.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.error.message || 'Failed to delete course';
             });
     },
 });

@@ -82,22 +82,53 @@ const enrollmentSlice = createSlice({
             .addCase(fetchStudentEnrollments.fulfilled, (state, action) => {
                 state.loading = false;
                 state.enrollments = action.payload;
+                state.error = null;
             })
             .addCase(fetchStudentEnrollments.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.error.message || 'Failed to fetch enrollments';
             })
+            .addCase(enrollStudent.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
             .addCase(enrollStudent.fulfilled, (state, action) => {
+                state.loading = false;
                 state.enrollments.push(action.payload);
+                state.error = null;
+            })
+            .addCase(enrollStudent.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.error.message || 'Failed to enroll student';
+            })
+            .addCase(gradeEnrollment.pending, (state) => {
+                state.loading = true;
+                state.error = null;
             })
             .addCase(gradeEnrollment.fulfilled, (state, action) => {
+                state.loading = false;
                 const index = state.enrollments.findIndex(e => e.id === action.payload.id);
                 if (index !== -1) {
                     state.enrollments[index] = action.payload;
                 }
+                state.error = null;
+            })
+            .addCase(gradeEnrollment.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.error.message || 'Failed to grade enrollment';
+            })
+            .addCase(dropEnrollment.pending, (state) => {
+                state.loading = true;
+                state.error = null;
             })
             .addCase(dropEnrollment.fulfilled, (state, action) => {
+                state.loading = false;
                 state.enrollments = state.enrollments.filter(e => e.id !== action.payload);
+                state.error = null;
+            })
+            .addCase(dropEnrollment.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.error.message || 'Failed to drop enrollment';
             });
     },
 });

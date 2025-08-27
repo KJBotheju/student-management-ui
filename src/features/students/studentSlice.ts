@@ -69,26 +69,56 @@ const studentSlice = createSlice({
             })
             .addCase(fetchStudents.fulfilled, (state, action: PayloadAction<any>) => {
                 state.loading = false;
-                // Handle both DTO and direct Page response formats
                 state.students = action.payload.content || [];
                 state.currentPage = action.payload.number || action.payload.currentPage || 0;
                 state.totalPages = action.payload.totalPages || 0;
+                state.error = null;
             })
             .addCase(fetchStudents.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.error.message || 'Failed to fetch students';
             })
+            .addCase(createStudent.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
             .addCase(createStudent.fulfilled, (state, action) => {
+                state.loading = false;
                 state.students.push(action.payload);
+                state.error = null;
+            })
+            .addCase(createStudent.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.error.message || 'Failed to create student';
+            })
+            .addCase(updateStudent.pending, (state) => {
+                state.loading = true;
+                state.error = null;
             })
             .addCase(updateStudent.fulfilled, (state, action) => {
+                state.loading = false;
                 const index = state.students.findIndex(student => student.id === action.payload.id);
                 if (index !== -1) {
                     state.students[index] = action.payload;
                 }
+                state.error = null;
+            })
+            .addCase(updateStudent.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.error.message || 'Failed to update student';
+            })
+            .addCase(deleteStudent.pending, (state) => {
+                state.loading = true;
+                state.error = null;
             })
             .addCase(deleteStudent.fulfilled, (state, action) => {
+                state.loading = false;
                 state.students = state.students.filter(student => student.id !== action.payload);
+                state.error = null;
+            })
+            .addCase(deleteStudent.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.error.message || 'Failed to delete student';
             });
     },
 });
