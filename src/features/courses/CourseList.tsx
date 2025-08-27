@@ -525,14 +525,17 @@ const CourseList: React.FC = () => {
                 autoHideDuration={4000}
                 onClose={handleSnackbarClose}
                 message={snackbar.message}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
                 sx={{
+                    marginTop: '80px', // Space from top to avoid header overlap
                     '& .MuiSnackbarContent-root': {
                         backgroundColor: snackbar.severity === 'success' ? '#2e7d32' : '#d32f2f',
                         color: 'white',
                         fontWeight: 'bold',
                         borderRadius: 2,
                         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                        minWidth: '300px',
+                        fontSize: '1rem',
                     }
                 }}
             />

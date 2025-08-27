@@ -21,14 +21,18 @@ import {
     FormControl,
     InputLabel,
     Box,
-    AlertColor,
+    Snackbar,
+    Divider,
+    InputAdornment,
 } from '@mui/material';
 import { 
     Delete as DeleteIcon, 
     Grade as GradeIcon,
-    Add as AddIcon 
+    Add as AddIcon,
+    Person as PersonIcon,
+    School as SchoolIcon,
+    Close as CloseIcon,
 } from '@mui/icons-material';
-import Notification from '../../components/Notification';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import {
     fetchStudentEnrollments,
@@ -46,11 +50,11 @@ const EnrollmentList: React.FC = () => {
     const { students } = useSelector((state: RootState) => state.students);
     const { courses } = useSelector((state: RootState) => state.courses);
     
-    // Notification state
-    const [notification, setNotification] = useState({
+    // Snackbar state
+    const [snackbar, setSnackbar] = useState({
         open: false,
         message: '',
-        severity: 'success' as AlertColor
+        severity: 'success' as 'success' | 'error' | 'warning' | 'info'
     });
     
     // Confirmation dialog state
@@ -72,8 +76,31 @@ const EnrollmentList: React.FC = () => {
     const [selectedStudentId, setSelectedStudentId] = useState<string>('');
     const [gpa, setGpa] = useState<number | null>(null);
 
-    const grades = ['A_PLUS', 'A', 'A_MINUS', 'B_PLUS', 'B', 'B_MINUS', 
-                   'C_PLUS', 'C', 'C_MINUS', 'D_PLUS', 'D', 'E'];
+    const gradeMapping = {
+        'A_PLUS': 'A +',
+        'A': 'A',
+        'A_MINUS': 'A -',
+        'B_PLUS': 'B +',
+        'B': 'B',
+        'B_MINUS': 'B -',
+        'C_PLUS': 'C +',
+        'C': 'C',
+        'C_MINUS': 'C -',
+        'D_PLUS': 'D +',
+        'D': 'D',
+        'E': 'E'
+    };
+
+    const backendGrades = ['A_PLUS', 'A', 'A_MINUS', 'B_PLUS', 'B', 'B_MINUS', 'C_PLUS', 'C', 'C_MINUS', 'D_PLUS', 'D', 'E'];
+
+    const displayGrades = backendGrades.map(grade => ({
+        backend: grade,
+        display: gradeMapping[grade as keyof typeof gradeMapping]
+    }));
+
+    const getDisplayGrade = (backendGrade: string) => {
+        return gradeMapping[backendGrade as keyof typeof gradeMapping] || backendGrade;
+    };
 
     useEffect(() => {
         dispatch(fetchStudents({ page: 0, size: 100 }));
@@ -120,7 +147,11 @@ const EnrollmentList: React.FC = () => {
     const handleEnrollSubmit = async () => {
         try {
             if (!enrollFormData.studentId || !enrollFormData.courseId) {
-                alert('Please select both student and course');
+                setSnackbar({
+                    open: true,
+                    message: 'Please select both student and course',
+                    severity: 'warning'
+                });
                 return;
             }
 
@@ -130,18 +161,26 @@ const EnrollmentList: React.FC = () => {
             }));
 
             if (enrollStudent.fulfilled.match(result)) {
+                setSnackbar({
+                    open: true,
+                    message: 'Student enrolled successfully!',
+                    severity: 'success'
+                });
                 setEnrollOpen(false);
                 if (selectedStudentId) {
                     try {
                         await dispatch(fetchStudentEnrollments(Number(selectedStudentId))).unwrap();
                     } catch (error) {
                         console.error('Error refreshing enrollments:', error);
-                        // Don't show alert here as the enrollment was successful
                     }
                 }
             } else {
                 const error = result.payload as any;
-                alert(error?.message || 'Failed to enroll student. Please try again.');
+                setSnackbar({
+                    open: true,
+                    message: error?.message || 'Failed to enroll student. Please try again.',
+                    severity: 'error'
+                });
             }
         } catch (error: any) {
             console.error('Error enrolling student:', error);
@@ -151,19 +190,32 @@ const EnrollmentList: React.FC = () => {
 
     const handleGradeSubmit = async () => {
         if (selectedEnrollment && grade) {
-            await dispatch(gradeEnrollment({
-                id: selectedEnrollment.id,
-                grade: grade,
-            }));
-            setGradeOpen(false);
-            if (selectedStudentId) {
-                dispatch(fetchStudentEnrollments(Number(selectedStudentId)));
-                dispatch(fetchStudentGPA(Number(selectedStudentId)))
-                    .then((action: any) => {
-                        if (action.payload) {
-                            setGpa(action.payload.gpa);
-                        }
-                    });
+            try {
+                await dispatch(gradeEnrollment({
+                    id: selectedEnrollment.id,
+                    grade: grade,
+                }));
+                setSnackbar({
+                    open: true,
+                    message: 'Grade updated successfully!',
+                    severity: 'success'
+                });
+                setGradeOpen(false);
+                if (selectedStudentId) {
+                    dispatch(fetchStudentEnrollments(Number(selectedStudentId)));
+                    dispatch(fetchStudentGPA(Number(selectedStudentId)))
+                        .then((action: any) => {
+                            if (action.payload) {
+                                setGpa(action.payload.gpa);
+                            }
+                        });
+                }
+            } catch (error) {
+                setSnackbar({
+                    open: true,
+                    message: 'Failed to update grade. Please try again.',
+                    severity: 'error'
+                });
             }
         }
     };
@@ -178,19 +230,18 @@ const EnrollmentList: React.FC = () => {
                     await dispatch(dropEnrollment(id));
                     if (selectedStudentId) {
                         await dispatch(fetchStudentEnrollments(Number(selectedStudentId)));
-                        // Refresh GPA after dropping enrollment
                         const gpaAction: any = await dispatch(fetchStudentGPA(Number(selectedStudentId)));
                         if (gpaAction.payload) {
                             setGpa(gpaAction.payload.gpa);
                         }
                     }
-                    setNotification({
+                    setSnackbar({
                         open: true,
-                        message: 'Enrollment dropped successfully',
+                        message: 'Enrollment dropped successfully!',
                         severity: 'success'
                     });
                 } catch (error) {
-                    setNotification({
+                    setSnackbar({
                         open: true,
                         message: 'Failed to drop enrollment. Please try again.',
                         severity: 'error'
@@ -215,6 +266,19 @@ const EnrollmentList: React.FC = () => {
                     onClick={handleEnrollOpen}
                     disabled={!selectedStudentId}
                     startIcon={<AddIcon />}
+                    sx={{ 
+                        backgroundColor: '#2e7d32',
+                        '&:hover': {
+                            backgroundColor: '#1b5e20',
+                        },
+                        borderRadius: 2,
+                        px: 3,
+                        py: 1.5,
+                        fontWeight: 'bold',
+                        textTransform: 'none',
+                        fontSize: '1rem',
+                        boxShadow: '0 4px 12px rgba(46, 125, 50, 0.3)',
+                    }}
                 >
                     New Enrollment
                 </Button>
@@ -257,21 +321,6 @@ const EnrollmentList: React.FC = () => {
 
             {selectedStudentId && (
                 <>
-                    {gpa !== null && (
-                        <Typography variant="h6" gutterBottom>
-                            Current GPA: {gpa.toFixed(2)}
-                        </Typography>
-                    )}
-                    
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={handleEnrollOpen}
-                        sx={{ mb: 2 }}
-                    >
-                        New Enrollment
-                    </Button>
-
                     <TableContainer 
                         component={Paper} 
                         sx={{ 
@@ -296,7 +345,7 @@ const EnrollmentList: React.FC = () => {
                                         <TableCell>{enrollment.course.code}</TableCell>
                                         <TableCell>{enrollment.course.title}</TableCell>
                                         <TableCell>{enrollment.course.credits}</TableCell>
-                                        <TableCell>{enrollment.grade || 'Not graded'}</TableCell>
+                                        <TableCell>{enrollment.grade ? getDisplayGrade(enrollment.grade) : 'Not graded'}</TableCell>
                                         <TableCell>
                                             <IconButton onClick={() => handleGradeOpen(enrollment)}>
                                                 <GradeIcon />
@@ -313,11 +362,50 @@ const EnrollmentList: React.FC = () => {
                 </>
             )}
 
-            {/* Enroll Dialog */}
-            <Dialog open={enrollOpen} onClose={() => setEnrollOpen(false)}>
-                <DialogTitle>New Enrollment</DialogTitle>
-                <DialogContent>
-                    <FormControl fullWidth sx={{ mt: 1 }}>
+            <Dialog 
+                open={enrollOpen} 
+                onClose={() => setEnrollOpen(false)}
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        borderRadius: 3,
+                        boxShadow: '0 24px 48px rgba(0, 0, 0, 0.15)',
+                    }
+                }}
+            >
+                <DialogTitle
+                    sx={{
+                        background: 'linear-gradient(135deg, #2e7d32 0%, #43a047 100%)',
+                        color: 'white',
+                        py: 3,
+                        position: 'relative',
+                        textAlign: 'center',
+                    }}
+                >
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+                        <SchoolIcon sx={{ fontSize: 28 }} />
+                        <Typography variant="h5" component="div" sx={{ fontWeight: 'bold' }}>
+                            New Enrollment
+                        </Typography>
+                    </Box>
+                    <IconButton
+                        onClick={() => setEnrollOpen(false)}
+                        sx={{
+                            position: 'absolute',
+                            right: 8,
+                            top: 8,
+                            color: 'white',
+                            '&:hover': {
+                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                            },
+                        }}
+                    >
+                        <CloseIcon />
+                    </IconButton>
+                </DialogTitle>
+                <DialogContent sx={{ pt: 3, pb: 2 }}>
+                    <FormControl fullWidth sx={{ mt: 2 }}>
                         <InputLabel>Course</InputLabel>
                         <Select
                             required
@@ -326,6 +414,14 @@ const EnrollmentList: React.FC = () => {
                                 ...enrollFormData,
                                 courseId: e.target.value,
                             })}
+                            sx={{
+                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: '#2e7d32',
+                                },
+                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: '#2e7d32',
+                                },
+                            }}
                         >
                             {courses
                                 .filter((course: any) => 
@@ -339,50 +435,178 @@ const EnrollmentList: React.FC = () => {
                         </Select>
                     </FormControl>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setEnrollOpen(false)}>Cancel</Button>
+                <Divider />
+                <DialogActions sx={{ p: 3, gap: 2, justifyContent: 'center', backgroundColor: '#fafafa' }}>
+                    <Button 
+                        onClick={() => setEnrollOpen(false)}
+                        variant="outlined"
+                        sx={{
+                            color: '#666',
+                            borderColor: '#ddd',
+                            '&:hover': {
+                                borderColor: '#999',
+                                backgroundColor: '#f5f5f5',
+                            },
+                            borderRadius: 2,
+                            px: 4,
+                            py: 1,
+                            textTransform: 'none',
+                            fontWeight: 'bold',
+                        }}
+                    >
+                        Cancel
+                    </Button>
                     <Button 
                         onClick={handleEnrollSubmit} 
-                        color="primary"
+                        variant="contained"
                         disabled={!enrollFormData.courseId}
+                        sx={{
+                            background: 'linear-gradient(135deg, #2e7d32 0%, #43a047 100%)',
+                            '&:hover': {
+                                background: 'linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%)',
+                            },
+                            borderRadius: 2,
+                            px: 4,
+                            py: 1,
+                            textTransform: 'none',
+                            fontWeight: 'bold',
+                            boxShadow: '0 4px 12px rgba(46, 125, 50, 0.3)',
+                        }}
                     >
-                        Enroll
+                        Enroll Student
                     </Button>
                 </DialogActions>
             </Dialog>
 
             {/* Grade Dialog */}
-            <Dialog open={gradeOpen} onClose={() => setGradeOpen(false)}>
-                <DialogTitle>Update Grade</DialogTitle>
-                <DialogContent>
-                    <FormControl fullWidth sx={{ mt: 1 }}>
+            <Dialog 
+                open={gradeOpen} 
+                onClose={() => setGradeOpen(false)}
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        borderRadius: 3,
+                        boxShadow: '0 24px 48px rgba(0, 0, 0, 0.15)',
+                    }
+                }}
+            >
+                <DialogTitle
+                    sx={{
+                        background: 'linear-gradient(135deg, #2e7d32 0%, #43a047 100%)',
+                        color: 'white',
+                        py: 3,
+                        position: 'relative',
+                        textAlign: 'center',
+                    }}
+                >
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+                        <GradeIcon sx={{ fontSize: 28 }} />
+                        <Typography variant="h5" component="div" sx={{ fontWeight: 'bold' }}>
+                            Update Grade
+                        </Typography>
+                    </Box>
+                    <IconButton
+                        onClick={() => setGradeOpen(false)}
+                        sx={{
+                            position: 'absolute',
+                            right: 8,
+                            top: 8,
+                            color: 'white',
+                            '&:hover': {
+                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                            },
+                        }}
+                    >
+                        <CloseIcon />
+                    </IconButton>
+                </DialogTitle>
+                <DialogContent sx={{ pt: 3, pb: 2 }}>
+                    <FormControl fullWidth sx={{ mt: 2 }}>
                         <InputLabel>Grade</InputLabel>
                         <Select
                             value={grade}
                             onChange={(e) => setGrade(e.target.value)}
+                            sx={{
+                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: '#2e7d32',
+                                },
+                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: '#2e7d32',
+                                },
+                            }}
                         >
-                            {grades.map((g) => (
-                                <MenuItem key={g} value={g}>
-                                    {g.replace('_', ' ')}
+                            {displayGrades.map((gradeItem) => (
+                                <MenuItem key={gradeItem.backend} value={gradeItem.backend}>
+                                    {gradeItem.display}
                                 </MenuItem>
                             ))}
                         </Select>
                     </FormControl>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setGradeOpen(false)}>Cancel</Button>
-                    <Button onClick={handleGradeSubmit} color="primary">
+                <Divider />
+                <DialogActions sx={{ p: 3, gap: 2, justifyContent: 'center', backgroundColor: '#fafafa' }}>
+                    <Button 
+                        onClick={() => setGradeOpen(false)}
+                        variant="outlined"
+                        sx={{
+                            color: '#666',
+                            borderColor: '#ddd',
+                            '&:hover': {
+                                borderColor: '#999',
+                                backgroundColor: '#f5f5f5',
+                            },
+                            borderRadius: 2,
+                            px: 4,
+                            py: 1,
+                            textTransform: 'none',
+                            fontWeight: 'bold',
+                        }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button 
+                        onClick={handleGradeSubmit} 
+                        variant="contained"
+                        sx={{
+                            background: 'linear-gradient(135deg, #2e7d32 0%, #43a047 100%)',
+                            '&:hover': {
+                                background: 'linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%)',
+                            },
+                            borderRadius: 2,
+                            px: 4,
+                            py: 1,
+                            textTransform: 'none',
+                            fontWeight: 'bold',
+                            boxShadow: '0 4px 12px rgba(46, 125, 50, 0.3)',
+                        }}
+                    >
                         Update Grade
                     </Button>
                 </DialogActions>
             </Dialog>
 
-            {/* Notification Component */}
-            <Notification
-                open={notification.open}
-                message={notification.message}
-                severity={notification.severity}
-                onClose={() => setNotification(prev => ({ ...prev, open: false }))}
+            {/* Snackbar Component */}
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={4000}
+                onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+                message={snackbar.message}
+                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                sx={{
+                    marginTop: '80px',
+                    '& .MuiSnackbarContent-root': {
+                        backgroundColor: snackbar.severity === 'success' ? '#2e7d32' : 
+                                       snackbar.severity === 'error' ? '#d32f2f' : 
+                                       snackbar.severity === 'warning' ? '#f57c00' : '#1976d2',
+                        color: 'white',
+                        fontWeight: 'bold',
+                        borderRadius: 2,
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                        minWidth: '300px',
+                        fontSize: '1rem',
+                    }
+                }}
             />
 
             {/* Confirmation Dialog */}
