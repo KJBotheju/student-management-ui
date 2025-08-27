@@ -56,7 +56,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <AppBar position="static" elevation={0}>
                 <Toolbar sx={{ justifyContent: 'space-between' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <SchoolIcon sx={{ fontSize: 32 }} />
+                        <SchoolIcon sx={{ fontSize: 32, color: '#2e7d32' }} />
                         <Typography variant="h5" component="div" sx={{ fontWeight: 600 }}>
                             University Course Management
                         </Typography>
