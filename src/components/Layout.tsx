@@ -68,7 +68,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     </Box>
                 </Toolbar>
             </AppBar>
-            <Box sx={{ flex: 1, p: 4, width: '100%' }}>
+            <Box 
+                component="main"
+                sx={{ 
+                    flex: 1,
+                    p: 4,
+                    width: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    minHeight: 0 // This is important for proper flex behavior
+                }}
+            >
                 <Paper 
                     elevation={0} 
                     sx={{ 
@@ -76,12 +86,20 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                         borderRadius: 3,
                         backgroundColor: 'background.paper',
                         border: `1px solid ${theme.palette.divider}`,
-                        height: 'calc(100vh - 160px)', // Adjust height to fill available space
+                        flex: 1,
                         display: 'flex',
                         flexDirection: 'column',
+                        overflow: 'hidden' // Contains the overflow
                     }}
                 >
-                    {children}
+                    <Box sx={{
+                        flex: 1,
+                        overflow: 'auto', // Enables scrolling only when needed
+                        display: 'flex',
+                        flexDirection: 'column'
+                    }}>
+                        {children}
+                    </Box>
                 </Paper>
             </Box>
             <Box 

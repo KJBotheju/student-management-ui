@@ -101,11 +101,15 @@ const CourseList: React.FC = () => {
         dispatch(fetchCourses({ page: value - 1, size: 10 }));
     };
 
-    if (loading) return <div>Loading...</div>;
-
     return (
-        <>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            height: '100%',
+            gap: 2
+        }}>
+            {/* Header */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="h4">
                     Courses
                 </Typography>
@@ -114,18 +118,25 @@ const CourseList: React.FC = () => {
                     color="primary"
                     onClick={() => handleOpen()}
                     sx={{ backgroundColor: '#2e7d32' }}
+                    disabled={loading}
                 >
                     Add New Course
                 </Button>
             </Box>
-            <TableContainer 
-                component={Paper} 
-                sx={{ 
-                    borderRadius: 2,
-                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                    overflow: 'hidden'
-                }}
-            >
+
+            {/* Table Container */}
+            <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+                <TableContainer 
+                    component={Paper} 
+                    sx={{ 
+                        flex: 1,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        borderRadius: 2,
+                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                        overflow: 'auto'
+                    }}
+                >
                 <Table>
                     <TableHead>
                         <TableRow sx={{ backgroundColor: '#2e7d32' }}>
@@ -137,7 +148,24 @@ const CourseList: React.FC = () => {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {courses.map((course: Course) => (
+                        {loading ? (
+                            <TableRow>
+                                <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
+                                    <Typography variant="body1" color="textSecondary">
+                                        Loading courses...
+                                    </Typography>
+                                </TableCell>
+                            </TableRow>
+                        ) : courses.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
+                                    <Typography variant="body1" color="textSecondary">
+                                        No courses found
+                                    </Typography>
+                                </TableCell>
+                            </TableRow>
+                        ) : (
+                            courses.map((course: Course) => (
                             <TableRow key={course.id}>
                                 <TableCell>{course.code}</TableCell>
                                 <TableCell>{course.title}</TableCell>
@@ -152,7 +180,7 @@ const CourseList: React.FC = () => {
                                     </IconButton>
                                 </TableCell>
                             </TableRow>
-                        ))}
+                        )))}
                     </TableBody>
                 </Table>
             </TableContainer>
@@ -229,7 +257,8 @@ const CourseList: React.FC = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
-        </>
+            </Box>
+        </Box>
     );
 };
 
