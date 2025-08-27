@@ -40,6 +40,7 @@ import {
     Groups as GroupsIcon,
     Close as CloseIcon,
 } from '@mui/icons-material';
+import ConfirmDialog from '../../components/ConfirmDialog';
 
 interface Course {
     id: number;
@@ -65,6 +66,17 @@ const CourseList: React.FC = () => {
 
     const [open, setOpen] = useState(false);
     const [editingCourse, setEditingCourse] = useState<Course | null>(null);
+    const [confirmDialog, setConfirmDialog] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        onConfirm: () => void;
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => {}
+    });
     const [formData, setFormData] = useState<Omit<Course, 'id'>>({
         code: '',
         title: '',
@@ -125,24 +137,30 @@ const CourseList: React.FC = () => {
         }
     };
 
-    const handleDelete = async (id: number) => {
-        if (window.confirm('Are you sure you want to delete this course?')) {
-            try {
-                await dispatch(deleteCourse(id));
-                setSnackbar({
-                    open: true,
-                    message: 'Course deleted successfully!',
-                    severity: 'success'
-                });
-                dispatch(fetchCourses({ page: currentPage, size: 10 }));
-            } catch (error) {
-                setSnackbar({
-                    open: true,
-                    message: 'Error deleting course. Please try again.',
-                    severity: 'error'
-                });
+    const handleDelete = (id: number) => {
+        setConfirmDialog({
+            isOpen: true,
+            title: 'Delete Course',
+            message: 'Are you sure you want to delete this course?',
+            onConfirm: async () => {
+                try {
+                    await dispatch(deleteCourse(id));
+                    setSnackbar({
+                        open: true,
+                        message: 'Course deleted successfully!',
+                        severity: 'success'
+                    });
+                    dispatch(fetchCourses({ page: currentPage, size: 10 }));
+                } catch (error) {
+                    setSnackbar({
+                        open: true,
+                        message: 'Error deleting course. Please try again.',
+                        severity: 'error'
+                    });
+                }
+                setConfirmDialog(prev => ({ ...prev, isOpen: false }));
             }
-        }
+        });
     };
 
     const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
@@ -189,7 +207,6 @@ const CourseList: React.FC = () => {
                 </Button>
             </Box>
 
-            {/* Table Container */}
             <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
                 <TableContainer 
                     component={Paper} 
@@ -334,7 +351,7 @@ const CourseList: React.FC = () => {
                             onChange={(e) =>
                                 setFormData({ ...formData, code: e.target.value })
                             }
-                            placeholder="e.g., CS101, MATH201"
+                            placeholder="e.g., AINT 44052, CSCI 44092"
                             InputProps={{
                                 startAdornment: (
                                     <InputAdornment position="start">
@@ -527,7 +544,7 @@ const CourseList: React.FC = () => {
                 message={snackbar.message}
                 anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
                 sx={{
-                    marginTop: '80px', // Space from top to avoid header overlap
+                    marginTop: '80px',
                     '& .MuiSnackbarContent-root': {
                         backgroundColor: snackbar.severity === 'success' ? '#2e7d32' : '#d32f2f',
                         color: 'white',
@@ -538,6 +555,14 @@ const CourseList: React.FC = () => {
                         fontSize: '1rem',
                     }
                 }}
+            />
+
+            <ConfirmDialog
+                open={confirmDialog.isOpen}
+                title={confirmDialog.title}
+                message={confirmDialog.message}
+                onConfirm={confirmDialog.onConfirm}
+                onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
             />
             </Box>
         </Box>

@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { store } from './store/store';
@@ -12,12 +11,12 @@ import EnrollmentList from './features/enrollments/EnrollmentList';
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#2e7d32', // dark green
-      light: '#4caf50', // light green
-      dark: '#1b5e20', // darker green
+      main: '#2e7d32',
+      light: '#4caf50',
+      dark: '#1b5e20',
     },
     secondary: {
-      main: '#81c784', // lighter green
+      main: '#81c784',
     },
     background: {
       default: '#ffffff',

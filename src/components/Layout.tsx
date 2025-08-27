@@ -76,7 +76,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     width: '100%',
                     display: 'flex',
                     flexDirection: 'column',
-                    minHeight: 0 // This is important for proper flex behavior
+                    minHeight: 0
                 }}
             >
                 <Paper 
@@ -89,12 +89,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                         flex: 1,
                         display: 'flex',
                         flexDirection: 'column',
-                        overflow: 'hidden' // Contains the overflow
+                        overflow: 'hidden'
                     }}
                 >
                     <Box sx={{
                         flex: 1,
-                        overflow: 'auto', // Enables scrolling only when needed
+                        overflow: 'auto',
                         display: 'flex',
                         flexDirection: 'column'
                     }}>

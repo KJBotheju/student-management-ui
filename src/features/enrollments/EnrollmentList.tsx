@@ -23,7 +23,6 @@ import {
     Box,
     Snackbar,
     Divider,
-    InputAdornment,
 } from '@mui/material';
 import { 
     Delete as DeleteIcon, 
@@ -50,14 +49,12 @@ const EnrollmentList: React.FC = () => {
     const { students } = useSelector((state: RootState) => state.students);
     const { courses } = useSelector((state: RootState) => state.courses);
     
-    // Snackbar state
     const [snackbar, setSnackbar] = useState({
         open: false,
         message: '',
         severity: 'success' as 'success' | 'error' | 'warning' | 'info'
     });
     
-    // Confirmation dialog state
     const [confirmDialog, setConfirmDialog] = useState({
         open: false,
         title: '',
@@ -478,7 +475,6 @@ const EnrollmentList: React.FC = () => {
                 </DialogActions>
             </Dialog>
 
-            {/* Grade Dialog */}
             <Dialog 
                 open={gradeOpen} 
                 onClose={() => setGradeOpen(false)}
@@ -586,7 +582,6 @@ const EnrollmentList: React.FC = () => {
                 </DialogActions>
             </Dialog>
 
-            {/* Snackbar Component */}
             <Snackbar
                 open={snackbar.open}
                 autoHideDuration={4000}
@@ -597,8 +592,8 @@ const EnrollmentList: React.FC = () => {
                     marginTop: '80px',
                     '& .MuiSnackbarContent-root': {
                         backgroundColor: snackbar.severity === 'success' ? '#2e7d32' : 
-                                       snackbar.severity === 'error' ? '#d32f2f' : 
-                                       snackbar.severity === 'warning' ? '#f57c00' : '#1976d2',
+                            snackbar.severity === 'error' ? '#d32f2f' : 
+                            snackbar.severity === 'warning' ? '#f57c00' : '#1976d2',
                         color: 'white',
                         fontWeight: 'bold',
                         borderRadius: 2,
@@ -609,7 +604,6 @@ const EnrollmentList: React.FC = () => {
                 }}
             />
 
-            {/* Confirmation Dialog */}
             <ConfirmDialog
                 open={confirmDialog.open}
                 title={confirmDialog.title}

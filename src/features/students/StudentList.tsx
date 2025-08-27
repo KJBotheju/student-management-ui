@@ -29,7 +29,6 @@ import {
     Snackbar,
     Divider,
     InputAdornment,
-    Chip,
 } from '@mui/material';
 import { 
     Edit as EditIcon, 
@@ -40,6 +39,7 @@ import {
     Badge as BadgeIcon,
     Close as CloseIcon,
 } from '@mui/icons-material';
+import ConfirmDialog from '../../components/ConfirmDialog';
 
 const StudentList: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -59,6 +59,12 @@ const StudentList: React.FC = () => {
         open: false,
         message: '',
         severity: 'success' as 'success' | 'error' | 'warning' | 'info'
+    });
+    const [confirmDialog, setConfirmDialog] = useState({
+        open: false,
+        title: '',
+        message: '',
+        onConfirm: () => {}
     });
 
     useEffect(() => {
@@ -110,23 +116,29 @@ const StudentList: React.FC = () => {
     };
 
     const handleDelete = async (id: number) => {
-        if (window.confirm('Are you sure you want to delete this student?')) {
-            try {
-                await dispatch(deleteStudent(id));
-                setSnackbar({
-                    open: true,
-                    message: 'Student deleted successfully!',
-                    severity: 'success'
-                });
-                dispatch(fetchStudents({ page: currentPage, size: 10 }));
-            } catch (error) {
-                setSnackbar({
-                    open: true,
-                    message: 'Error deleting student. Please try again.',
-                    severity: 'error'
-                });
+        setConfirmDialog({
+            open: true,
+            title: 'Delete Student',
+            message: 'Are you sure you want to delete this student? This action cannot be undone.',
+            onConfirm: async () => {
+                try {
+                    await dispatch(deleteStudent(id));
+                    setSnackbar({
+                        open: true,
+                        message: 'Student deleted successfully!',
+                        severity: 'success'
+                    });
+                    dispatch(fetchStudents({ page: currentPage, size: 10 }));
+                } catch (error) {
+                    setSnackbar({
+                        open: true,
+                        message: 'Error deleting student. Please try again.',
+                        severity: 'error'
+                    });
+                }
+                setConfirmDialog(prev => ({ ...prev, open: false }));
             }
-        }
+        });
     };
 
     const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
@@ -144,7 +156,6 @@ const StudentList: React.FC = () => {
             height: '100%',
             gap: 2
         }}>
-            {/* Header */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="h4">Students</Typography>
                 <Button
@@ -171,7 +182,6 @@ const StudentList: React.FC = () => {
                 </Button>
             </Box>
 
-            {/* Table Container */}
             <Box sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                 <TableContainer 
                     component={Paper} 
@@ -298,7 +308,7 @@ const StudentList: React.FC = () => {
                                 onChange={(e) =>
                                     setFormData({ ...formData, indexNumber: e.target.value })
                                 }
-                                placeholder="e.g., ST001, 2021001"
+                                placeholder="e.g., CS/2019/009, CT/2020/001"
                                 InputProps={{
                                     startAdornment: (
                                         <InputAdornment position="start">
@@ -393,7 +403,7 @@ const StudentList: React.FC = () => {
                                 onChange={(e) =>
                                     setFormData({ ...formData, email: e.target.value })
                                 }
-                                placeholder="student@university.edu"
+                                placeholder="student@kln.ac.lk"
                                 InputProps={{
                                     startAdornment: (
                                         <InputAdornment position="start">
@@ -482,6 +492,14 @@ const StudentList: React.FC = () => {
                             fontSize: '1rem',
                         }
                     }}
+                />
+
+                <ConfirmDialog
+                    open={confirmDialog.open}
+                    title={confirmDialog.title}
+                    message={confirmDialog.message}
+                    onConfirm={confirmDialog.onConfirm}
+                    onCancel={() => setConfirmDialog(prev => ({ ...prev, open: false }))}
                 />
             </Box>
         </Box>
