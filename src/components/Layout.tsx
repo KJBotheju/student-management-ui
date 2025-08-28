@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
 import {
     AppBar,
     Toolbar,
@@ -9,13 +10,21 @@ import {
     Box,
     Paper,
     useTheme,
+    Menu,
+    MenuItem,
+    IconButton,
+    Avatar,
 } from '@mui/material';
 import {
     School as SchoolIcon,
     MenuBook as MenuBookIcon,
     People as PeopleIcon,
     Assignment as AssignmentIcon,
+    AccountCircle,
+    Logout as LogoutIcon,
 } from '@mui/icons-material';
+import { RootState, AppDispatch } from '../store/store';
+import { logout } from '../features/auth/authSlice';
 
 interface LayoutProps {
     children: React.ReactNode;
@@ -24,8 +33,25 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
     const theme = useTheme();
     const location = useLocation();
+    const dispatch = useDispatch<AppDispatch>();
+    const { user } = useSelector((state: RootState) => state.auth);
+    
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
     const isActive = (path: string) => location.pathname === path;
+
+    const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleMenuClose = () => {
+        setAnchorEl(null);
+    };
+
+    const handleLogout = () => {
+        dispatch(logout());
+        handleMenuClose();
+    };
 
     const NavButton = ({ to, icon, label }: { to: string; icon: React.ReactNode; label: string }) => (
         <Button
@@ -61,10 +87,52 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                             University Course Management
                         </Typography>
                     </Box>
-                    <Box sx={{ display: 'flex' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <NavButton to="/courses" icon={<MenuBookIcon />} label="Courses" />
                         <NavButton to="/students" icon={<PeopleIcon />} label="Students" />
                         <NavButton to="/enrollments" icon={<AssignmentIcon />} label="Enrollments" />
+                        
+                        {/* User Menu */}
+                        <Box sx={{ ml: 2 }}>
+                            <IconButton
+                                onClick={handleMenuOpen}
+                                sx={{ 
+                                    color: 'white',
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                    }
+                                }}
+                            >
+                                <AccountCircle sx={{ fontSize: 32 }} />
+                            </IconButton>
+                            <Menu
+                                anchorEl={anchorEl}
+                                open={Boolean(anchorEl)}
+                                onClose={handleMenuClose}
+                                PaperProps={{
+                                    sx: {
+                                        mt: 1,
+                                        minWidth: 200,
+                                    }
+                                }}
+                            >
+                                <Box sx={{ px: 2, py: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
+                                    <Typography variant="subtitle2" color="text.secondary">
+                                        Welcome
+                                    </Typography>
+                                    <Typography variant="body1" fontWeight="bold">
+                                        {user?.username || 'User'}
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary">
+                                        {user?.role || 'Role'}
+                                    </Typography>
+                                </Box>
+                                <MenuItem onClick={handleLogout} sx={{ py: 1.5 }}>
+                                    <LogoutIcon sx={{ mr: 1, fontSize: 20 }} />
+                                    Logout
+                                </MenuItem>
+                            </Menu>
+                        </Box>
                     </Box>
                 </Toolbar>
             </AppBar>

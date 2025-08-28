@@ -1,12 +1,18 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider } from 'react-redux';
-import { store } from './store/store';
+import { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { store, RootState, AppDispatch } from './store/store';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import Layout from './components/Layout';
 import CourseList from './features/courses/CourseList';
 import StudentList from './features/students/StudentList';
 import EnrollmentList from './features/enrollments/EnrollmentList';
+import Login from './features/auth/Login';
+import Signup from './features/auth/Signup';
+import ProtectedRoute from './features/auth/ProtectedRoute';
+import { loadUserFromToken } from './features/auth/authSlice';
 
 const theme = createTheme({
   palette: {
@@ -57,21 +63,75 @@ const theme = createTheme({
   },
 });
 
+// App content component
+const AppContent: React.FC = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+
+  useEffect(() => {
+    // Load user data from token on app start
+    dispatch(loadUserFromToken());
+  }, [dispatch]);
+
+  return (
+    <Router>
+      <Routes>
+        {/* Public Routes */}
+        <Route 
+          path="/login" 
+          element={isAuthenticated ? <Navigate to="/courses" replace /> : <Login />} 
+        />
+        <Route 
+          path="/signup" 
+          element={isAuthenticated ? <Navigate to="/courses" replace /> : <Signup />} 
+        />
+        
+        {/* Protected Routes */}
+        <Route path="/" element={<Navigate to="/courses" replace />} />
+        <Route
+          path="/courses"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <CourseList />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/students"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <StudentList />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/enrollments"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <EnrollmentList />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        
+        {/* Fallback route */}
+        <Route path="*" element={<Navigate to="/courses" replace />} />
+      </Routes>
+    </Router>
+  );
+};
+
 function App() {
   return (
     <Provider store={store}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <Router>
-          <Layout>
-            <Routes>
-              <Route path="/" element={<CourseList />} />
-              <Route path="/courses" element={<CourseList />} />
-              <Route path="/students" element={<StudentList />} />
-              <Route path="/enrollments" element={<EnrollmentList />} />
-            </Routes>
-          </Layout>
-        </Router>
+        <AppContent />
       </ThemeProvider>
     </Provider>
   );

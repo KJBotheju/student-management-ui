@@ -12,6 +12,41 @@ const api = axios.create({
     withCredentials: true,
 });
 
+// Request interceptor to add JWT token
+api.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+            console.log('Adding token to request:', config.url, token.substring(0, 20) + '...');
+        } else {
+            console.log('No token found for request:', config.url);
+        }
+        return config;
+    },
+    (error) => {
+        console.error('Request interceptor error:', error);
+        return Promise.reject(error);
+    }
+);
+
+// Response interceptor to handle authentication errors
+api.interceptors.response.use(
+    (response) => {
+        return response;
+    },
+    (error) => {
+        console.error('API Error:', error.response?.status, error.response?.data);
+        if (error.response?.status === 401) {
+            console.log('401 Unauthorized - redirecting to login');
+            // Token expired or invalid, redirect to login
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+        }
+        return Promise.reject(error);
+    }
+);
+
 export const courseAPI = {
     getAllCourses: (page = 0, size = 10) => api.get(`/courses?page=${page}&size=${size}`),
     getCourse: (id: number) => api.get(`/courses/${id}`),

@@ -2,6 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import courseReducer from '../features/courses/courseSlice';
 import studentReducer from '../features/students/studentSlice';
 import enrollmentReducer from '../features/enrollments/enrollmentSlice';
+import authReducer from '../features/auth/authSlice';
 
 export interface Course {
     id: number;
@@ -54,6 +55,7 @@ export const store = configureStore({
         courses: courseReducer,
         students: studentReducer,
         enrollments: enrollmentReducer,
+        auth: authReducer,
     },
 });
 
