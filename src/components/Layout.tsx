@@ -88,8 +88,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                         </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <NavButton to="/courses" icon={<MenuBookIcon />} label="Courses" />
-                        <NavButton to="/students" icon={<PeopleIcon />} label="Students" />
+                        {(user?.role === 'ADMIN' || user?.role === 'INSTRUCTOR') && (
+                            <NavButton to="/courses" icon={<MenuBookIcon />} label="Courses" />
+                        )}
+                        {(user?.role === 'ADMIN' || user?.role === 'INSTRUCTOR') && (
+                            <NavButton to="/students" icon={<PeopleIcon />} label="Students" />
+                        )}
                         <NavButton to="/enrollments" icon={<AssignmentIcon />} label="Enrollments" />
                         
                         {/* User Menu */}

@@ -66,12 +66,29 @@ const theme = createTheme({
 // App content component
 const AppContent: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
     // Load user data from token on app start
     dispatch(loadUserFromToken());
   }, [dispatch]);
+
+  // Protected Route wrapper that checks user role
+  const RoleProtectedRoute: React.FC<{ 
+    children: React.ReactNode; 
+    allowedRoles?: string[];
+    redirectTo?: string;
+  }> = ({ children, allowedRoles = [], redirectTo = "/enrollments" }) => {
+    return (
+      <ProtectedRoute>
+        {user && allowedRoles.length > 0 && !allowedRoles.includes(user.role) ? (
+          <Navigate to={redirectTo} replace />
+        ) : (
+          children
+        )}
+      </ProtectedRoute>
+    );
+  };
 
   return (
     <Router>
@@ -79,33 +96,50 @@ const AppContent: React.FC = () => {
         {/* Public Routes */}
         <Route 
           path="/login" 
-          element={isAuthenticated ? <Navigate to="/courses" replace /> : <Login />} 
+          element={isAuthenticated ? (
+            user?.role === 'STUDENT' ? <Navigate to="/enrollments" replace /> : <Navigate to="/courses" replace />
+          ) : <Login />} 
         />
         <Route 
           path="/signup" 
-          element={isAuthenticated ? <Navigate to="/courses" replace /> : <Signup />} 
+          element={isAuthenticated ? (
+            user?.role === 'STUDENT' ? <Navigate to="/enrollments" replace /> : <Navigate to="/courses" replace />
+          ) : <Signup />} 
         />
         
         {/* Protected Routes */}
-        <Route path="/" element={<Navigate to="/courses" replace />} />
+        <Route 
+          path="/" 
+          element={
+            isAuthenticated ? (
+              user?.role === 'STUDENT' ? (
+                <Navigate to="/enrollments" replace />
+              ) : (
+                <Navigate to="/courses" replace />
+              )
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          } 
+        />
         <Route
           path="/courses"
           element={
-            <ProtectedRoute>
+            <RoleProtectedRoute allowedRoles={['ADMIN', 'INSTRUCTOR']}>
               <Layout>
                 <CourseList />
               </Layout>
-            </ProtectedRoute>
+            </RoleProtectedRoute>
           }
         />
         <Route
           path="/students"
           element={
-            <ProtectedRoute>
+            <RoleProtectedRoute allowedRoles={['ADMIN', 'INSTRUCTOR']}>
               <Layout>
                 <StudentList />
               </Layout>
-            </ProtectedRoute>
+            </RoleProtectedRoute>
           }
         />
         <Route
@@ -120,7 +154,20 @@ const AppContent: React.FC = () => {
         />
         
         {/* Fallback route */}
-        <Route path="*" element={<Navigate to="/courses" replace />} />
+        <Route 
+          path="*" 
+          element={
+            isAuthenticated ? (
+              user?.role === 'STUDENT' ? (
+                <Navigate to="/enrollments" replace />
+              ) : (
+                <Navigate to="/courses" replace />
+              )
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          } 
+        />
       </Routes>
     </Router>
   );
