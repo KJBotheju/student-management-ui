@@ -48,6 +48,7 @@ const EnrollmentList: React.FC = () => {
     const { enrollments, loading } = useSelector((state: RootState) => state.enrollments);
     const { students } = useSelector((state: RootState) => state.students);
     const { courses } = useSelector((state: RootState) => state.courses);
+    const { user } = useSelector((state: RootState) => state.auth);
     
     const [snackbar, setSnackbar] = useState({
         open: false,
@@ -122,6 +123,19 @@ const EnrollmentList: React.FC = () => {
                 });
         }
     }, [dispatch, selectedStudentId]);
+
+    // Auto-select student for STUDENT role users based on email
+    useEffect(() => {
+        if (user?.role === 'STUDENT' && user?.email && students.length > 0 && !selectedStudentId) {
+            // Find the student record that matches the current user's email
+            const currentStudent = students.find((student: any) => 
+                student.email === user.email
+            );
+            if (currentStudent) {
+                setSelectedStudentId(currentStudent.id.toString());
+            }
+        }
+    }, [user, students, selectedStudentId]);
 
     const handleEnrollOpen = () => {
         if (!selectedStudentId) {
@@ -283,10 +297,13 @@ const EnrollmentList: React.FC = () => {
             
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 3 }}>
                 <FormControl sx={{ minWidth: 300 }}>
-                    <InputLabel>Select Student</InputLabel>
+                    <InputLabel>
+                        {user?.role === 'STUDENT' ? 'Your Account' : 'Select Student'}
+                    </InputLabel>
                     <Select
                         value={selectedStudentId}
                         onChange={(e) => setSelectedStudentId(e.target.value)}
+                        disabled={user?.role === 'STUDENT'}
                     >
                         {students.map((student: any) => (
                             <MenuItem key={student.id} value={student.id}>
@@ -295,26 +312,59 @@ const EnrollmentList: React.FC = () => {
                         ))}
                     </Select>
                 </FormControl>
-                {gpa !== null && selectedStudentId && (
-                    <Paper 
-                        elevation={0} 
-                        sx={{ 
-                            p: 2, 
-                            backgroundColor: 'primary.light',
-                            color: 'white',
-                            borderRadius: 2,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 1
-                        }}
-                    >
-                        <GradeIcon />
-                        <Typography variant="h6" component="div">
-                            Current GPA: {gpa.toFixed(2)}
-                        </Typography>
-                    </Paper>
+                {user?.role === 'STUDENT' && (
+                    <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                        Automatically selected based on your account
+                    </Typography>
                 )}
             </Box>
+
+            {user?.role === 'STUDENT' && !selectedStudentId && students.length > 0 && (
+                <Paper 
+                    sx={{ 
+                        p: 3, 
+                        mb: 3,
+                        textAlign: 'center',
+                        backgroundColor: 'warning.light',
+                        color: 'warning.contrastText',
+                        borderRadius: 2
+                    }}
+                >
+                    <PersonIcon sx={{ fontSize: 48, mb: 2 }} />
+                    <Typography variant="h6" gutterBottom>
+                        Student Record Not Found
+                    </Typography>
+                    <Typography variant="body1">
+                        We couldn't find your student record using email: {user?.email}
+                        <br />
+                        Please contact the administrator to link your account.
+                    </Typography>
+                </Paper>
+            )}
+
+            {selectedStudentId && (
+                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 3 }}>
+                    {gpa !== null && (
+                        <Paper 
+                            elevation={0} 
+                            sx={{ 
+                                p: 2, 
+                                backgroundColor: 'primary.light',
+                                color: 'white',
+                                borderRadius: 2,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1
+                            }}
+                        >
+                            <GradeIcon />
+                            <Typography variant="h6" component="div">
+                                Current GPA: {gpa.toFixed(2)}
+                            </Typography>
+                        </Paper>
+                    )}
+                </Box>
+            )}
 
             {selectedStudentId && (
                 <>
