@@ -12,7 +12,6 @@ const api = axios.create({
     withCredentials: true,
 });
 
-// Request interceptor to add JWT token
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('token');
@@ -30,7 +29,6 @@ api.interceptors.request.use(
     }
 );
 
-// Response interceptor to handle authentication errors
 api.interceptors.response.use(
     (response) => {
         return response;
@@ -39,7 +37,6 @@ api.interceptors.response.use(
         console.error('API Error:', error.response?.status, error.response?.data);
         if (error.response?.status === 401) {
             console.log('401 Unauthorized - redirecting to login');
-            // Token expired or invalid, redirect to login
             localStorage.removeItem('token');
             window.location.href = '/login';
         }

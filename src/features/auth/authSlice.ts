@@ -3,7 +3,6 @@ import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:8080/api';
 
-// Create axios instance for auth
 const authApi = axios.create({
     baseURL: API_BASE_URL,
     headers: {
@@ -46,7 +45,6 @@ export interface AuthResponse {
     message?: string;
 }
 
-// Async thunks
 export const login = createAsyncThunk(
     'auth/login',
     async (credentials: LoginRequest, { rejectWithValue }) => {
@@ -54,7 +52,6 @@ export const login = createAsyncThunk(
             const response = await authApi.post<AuthResponse>('/auth/login', credentials);
             
             if (response.data.token) {
-                // Store token in localStorage
                 localStorage.setItem('token', response.data.token);
                 
                 return response.data;
@@ -88,18 +85,15 @@ export const logout = createAsyncThunk(
     async (_, { rejectWithValue }) => {
         try {
             await authApi.post('/auth/logout');
-            // Remove token from localStorage
             localStorage.removeItem('token');
             return {};
         } catch (error: any) {
-            // Even if API call fails, we should still logout locally
             localStorage.removeItem('token');
             return {};
         }
     }
 );
 
-// Initial state
 const initialState: AuthState = {
     user: null,
     token: localStorage.getItem('token'),
@@ -108,7 +102,6 @@ const initialState: AuthState = {
     error: null,
 };
 
-// Create slice
 const authSlice = createSlice({
     name: 'auth',
     initialState,
@@ -121,8 +114,6 @@ const authSlice = createSlice({
             if (token) {
                 state.token = token;
                 state.isAuthenticated = true;
-                // In a real app, you might want to decode the JWT to get user info
-                // For now, we'll get it from the login response
             }
         },
         logoutLocal: (state) => {
@@ -134,7 +125,6 @@ const authSlice = createSlice({
         }
     },
     extraReducers: (builder) => {
-        // Login
         builder
             .addCase(login.pending, (state) => {
                 state.loading = true;
@@ -159,7 +149,6 @@ const authSlice = createSlice({
                 state.token = null;
             });
 
-        // Signup
         builder
             .addCase(signup.pending, (state) => {
                 state.loading = true;
@@ -168,14 +157,12 @@ const authSlice = createSlice({
             .addCase(signup.fulfilled, (state, action) => {
                 state.loading = false;
                 state.error = null;
-                // After successful signup, user needs to login
             })
             .addCase(signup.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
             });
 
-        // Logout
         builder
             .addCase(logout.pending, (state) => {
                 state.loading = true;
@@ -189,7 +176,6 @@ const authSlice = createSlice({
             })
             .addCase(logout.rejected, (state) => {
                 state.loading = false;
-                // Even if logout fails on server, clear local state
                 state.user = null;
                 state.token = null;
                 state.isAuthenticated = false;

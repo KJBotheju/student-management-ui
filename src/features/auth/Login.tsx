@@ -41,7 +41,6 @@ const Login: React.FC = () => {
             ...prev,
             [name]: value
         }));
-        // Clear error when user starts typing
         if (error) {
             dispatch(clearError());
         }
@@ -60,7 +59,6 @@ const Login: React.FC = () => {
                 navigate('/courses');
             }
         } catch (error) {
-            // Error is handled by the slice
         }
     };
 
@@ -88,7 +86,6 @@ const Login: React.FC = () => {
                 }}
             >
                 <CardContent sx={{ p: 4 }}>
-                    {/* Header */}
                     <Box sx={{ textAlign: 'center', mb: 3 }}>
                         <SchoolIcon sx={{ fontSize: 48, color: '#2e7d32', mb: 1 }} />
                         <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#2e7d32', mb: 1 }}>
@@ -99,14 +96,12 @@ const Login: React.FC = () => {
                         </Typography>
                     </Box>
 
-                    {/* Error Alert */}
                     {error && (
                         <Alert severity="error" sx={{ mb: 2 }}>
                             {error}
                         </Alert>
                     )}
 
-                    {/* Login Form */}
                     <Box component="form" onSubmit={handleSubmit}>
                         <TextField
                             fullWidth
@@ -182,7 +177,6 @@ const Login: React.FC = () => {
                             )}
                         </Button>
 
-                        {/* Sign Up Link */}
                         <Box sx={{ textAlign: 'center' }}>
                             <Typography variant="body2" color="text.secondary">
                                 Don't have an account?{' '}

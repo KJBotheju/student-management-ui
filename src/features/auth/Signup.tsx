@@ -52,7 +52,6 @@ const Signup: React.FC = () => {
             ...prev,
             [name]: value
         }));
-        // Clear error when user starts typing
         if (error) {
             dispatch(clearError());
         }
@@ -68,7 +67,6 @@ const Signup: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
-        // Validate form
         if (!formData.username.trim() || !formData.email.trim() || !formData.password.trim()) {
             return;
         }
@@ -94,13 +92,11 @@ const Signup: React.FC = () => {
             const result = await dispatch(signup(signupData));
             if (signup.fulfilled.match(result)) {
                 setSignupSuccess(true);
-                // Redirect to login after 2 seconds
                 setTimeout(() => {
                     navigate('/login');
                 }, 2000);
             }
         } catch (error) {
-            // Error is handled by the slice
         }
     };
 
@@ -159,7 +155,6 @@ const Signup: React.FC = () => {
                 }}
             >
                 <CardContent sx={{ p: 4 }}>
-                    {/* Header */}
                     <Box sx={{ textAlign: 'center', mb: 3 }}>
                         <SchoolIcon sx={{ fontSize: 48, color: '#2e7d32', mb: 1 }} />
                         <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#2e7d32', mb: 1 }}>
@@ -170,14 +165,12 @@ const Signup: React.FC = () => {
                         </Typography>
                     </Box>
 
-                    {/* Error Alert */}
                     {error && (
                         <Alert severity="error" sx={{ mb: 2 }}>
                             {error}
                         </Alert>
                     )}
 
-                    {/* Signup Form */}
                     <Box component="form" onSubmit={handleSubmit}>
                         <TextField
                             fullWidth
@@ -318,7 +311,6 @@ const Signup: React.FC = () => {
                             )}
                         </Button>
 
-                        {/* Sign In Link */}
                         <Box sx={{ textAlign: 'center' }}>
                             <Typography variant="body2" color="text.secondary">
                                 Already have an account?{' '}

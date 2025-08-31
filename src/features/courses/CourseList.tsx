@@ -178,7 +178,6 @@ const CourseList: React.FC = () => {
             height: '100%',
             gap: 2
         }}>
-            {/* Header */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="h4">
                     Courses

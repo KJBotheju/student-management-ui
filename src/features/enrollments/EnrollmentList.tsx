@@ -124,10 +124,8 @@ const EnrollmentList: React.FC = () => {
         }
     }, [dispatch, selectedStudentId]);
 
-    // Auto-select student for STUDENT role users based on email
     useEffect(() => {
         if (user?.role === 'STUDENT' && user?.email && students.length > 0 && !selectedStudentId) {
-            // Find the student record that matches the current user's email
             const currentStudent = students.find((student: any) => 
                 student.email === user.email
             );

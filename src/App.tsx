@@ -63,17 +63,14 @@ const theme = createTheme({
   },
 });
 
-// App content component
 const AppContent: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
-    // Load user data from token on app start
     dispatch(loadUserFromToken());
   }, [dispatch]);
 
-  // Protected Route wrapper that checks user role
   const RoleProtectedRoute: React.FC<{ 
     children: React.ReactNode; 
     allowedRoles?: string[];
@@ -93,7 +90,6 @@ const AppContent: React.FC = () => {
   return (
     <Router>
       <Routes>
-        {/* Public Routes */}
         <Route 
           path="/login" 
           element={isAuthenticated ? (
@@ -107,7 +103,6 @@ const AppContent: React.FC = () => {
           ) : <Signup />} 
         />
         
-        {/* Protected Routes */}
         <Route 
           path="/" 
           element={
@@ -153,7 +148,6 @@ const AppContent: React.FC = () => {
           }
         />
         
-        {/* Fallback route */}
         <Route 
           path="*" 
           element={
