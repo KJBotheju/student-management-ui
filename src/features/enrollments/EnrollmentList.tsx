@@ -312,11 +312,6 @@ const EnrollmentList: React.FC = () => {
                         ))}
                     </Select>
                 </FormControl>
-                {user?.role === 'STUDENT' && (
-                    <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
-                        Automatically selected based on your account
-                    </Typography>
-                )}
             </Box>
 
             {user?.role === 'STUDENT' && !selectedStudentId && students.length > 0 && (
@@ -394,9 +389,11 @@ const EnrollmentList: React.FC = () => {
                                         <TableCell>{enrollment.course.credits}</TableCell>
                                         <TableCell>{enrollment.grade ? getDisplayGrade(enrollment.grade) : 'Not graded'}</TableCell>
                                         <TableCell>
-                                            <IconButton onClick={() => handleGradeOpen(enrollment)}>
-                                                <GradeIcon />
-                                            </IconButton>
+                                            {user?.role !== 'STUDENT' && (
+                                                <IconButton onClick={() => handleGradeOpen(enrollment)}>
+                                                    <GradeIcon />
+                                                </IconButton>
+                                            )}
                                             <IconButton onClick={() => handleDrop(enrollment.id)}>
                                                 <DeleteIcon />
                                             </IconButton>
