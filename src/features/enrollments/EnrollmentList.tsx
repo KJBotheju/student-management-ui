@@ -290,7 +290,7 @@ const EnrollmentList: React.FC = () => {
                     >
                         {students.map((student: any) => (
                             <MenuItem key={student.id} value={student.id}>
-                                {student.indexNumber} - {student.firstName} {student.lastName}
+                                {student.email}
                             </MenuItem>
                         ))}
                     </Select>
