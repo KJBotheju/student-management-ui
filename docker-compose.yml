@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  # Frontend React Application
+  student-management-ui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - university-network
+    depends_on:
+      - backend
+
+  # Backend Spring Boot Application (assuming you have one)
+  backend:
+    # Replace this with your actual backend image
+    # image: your-backend-image:latest
+    # OR if you have backend source code:
+    # build:
+    #   context: ../backend
+    #   dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - DB_HOST=database
+      - DB_PORT=5432
+      - DB_NAME=university_db
+      - DB_USER=university_user
+      - DB_PASS=university_pass
+    networks:
+      - university-network
+    depends_on:
+      - database
+
+  # PostgreSQL Database (optional - if using external DB, remove this)
+  database:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=university_db
+      - POSTGRES_USER=university_user
+      - POSTGRES_PASSWORD=university_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - university-network
+
+networks:
+  university-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

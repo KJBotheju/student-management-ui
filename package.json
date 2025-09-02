@@ -31,7 +31,15 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "docker:build": "docker build -t student-management-ui .",
+    "docker:run": "docker run -p 3000:80 student-management-ui",
+    "docker:dev": "docker-compose -f docker-compose.dev.yml up --build",
+    "docker:prod": "docker-compose -f docker-compose.prod.yml up --build",
+    "docker:stop": "docker-compose down",
+    "docker:clean": "docker system prune -a -f",
+    "serve": "npx serve -s build -l 3000",
+    "analyze": "npm run build && npx source-map-explorer 'build/static/js/*.js'"
   },
   "eslintConfig": {
     "extends": [
